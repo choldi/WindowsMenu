@@ -7,14 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using JsonConfig;
+using System.IO;
 
 
 namespace WindowsMenu
 {
     public partial class frmMain : Form
     {
-        
+
+        private ConfigMenu config;
         public frmMain()
         {
             InitializeComponent();
@@ -25,17 +26,25 @@ namespace WindowsMenu
             string programa;
             string[] args = Environment.GetCommandLineArgs();
             programa = System.IO.Path.GetFileNameWithoutExtension(args[0]);
-            string defaultConfig = programa + ".conf";
+            string defaultConfig = programa + ".xml";
             if (args.Length < 2) {
                 MessageBox.Show("Sin parámetros:" + args.Length, programa);
-                dynamic config = Config.Default;
                 Properties.Settings settings = Properties.Settings.Default;
-                ConfigMenu cfMenu = new ConfigMenu();
-                cfMenu.SetMatrix(settings.Rows, settings.Columns);
-                config.Menu = cfMenu;
-                config.Save(); 
-                MessageBox.Show("Sin parámetros:" + args.Length, programa);
-
+                ConfigMenu cfMenu;
+                FileInfo fi = new FileInfo(defaultConfig);
+                if (fi.Exists)
+                { 
+                    cfMenu = new ConfigMenu(defaultConfig);
+                }
+                else
+                {
+                    MessageBox.Show("creando configuración" + args.Length, programa);
+                    cfMenu = new ConfigMenu();
+                    cfMenu.SetMatrix(settings.Rows, settings.Columns);
+                    cfMenu.Save(defaultConfig); 
+                }
+                config = cfMenu;
+                
 
 
             }
@@ -74,6 +83,18 @@ namespace WindowsMenu
                 gdi.DrawLine(pen, ample * i, 0, ample * i, this.Size.Height);
             for (int i = 1; i <= settings.Rows; i++)
                 gdi.DrawLine(pen, 0, alt * i, this.Size.Width, alt * i);
+            var frmOpts = new frmOpcions(config);
+            var result = frmOpts.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+
+                MessageBox.Show("OK");
+
+            }
+            else
+            {
+                MessageBox.Show("Cancel");
+            }
         }
 
         private void frmMain_MouseClick(object sender, MouseEventArgs e)
