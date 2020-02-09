@@ -10,13 +10,14 @@ namespace WindowsMenu
 {
     public class OpcioMenu
     {
-        string fileName;
-        string fileIcon;
-        string label;
-        string preExec;
-        string postExec;
-        bool execDefaultPreExec;
-        int position;
+        public System.Guid dynId { get; private set; }
+        public string fileName { get; private set; }
+        public string fileIcon { get; private set; }
+        public string label { get; private set; }
+        public string preExec { get; private set; }
+        public string postExec { get; private set; }
+        public bool execDefaultPreExec { get; private set; }
+        public int position { get; private set; }
 
         public OpcioMenu(string fileName, string fileIcon, string label, string preExec, string postExec, int position,bool execDefault=false)
         {
@@ -27,6 +28,7 @@ namespace WindowsMenu
             this.postExec = postExec;
             this.position = position;
             this.execDefaultPreExec = execDefault;
+            this.dynId = Guid.NewGuid();
         }
     }
 
@@ -68,7 +70,7 @@ namespace WindowsMenu
             {
                 throw new InvalidConfigFileException(fileconfig);
             }
-
+            this.opcions = new List<OpcioMenu>();
         }
         public void Save(string fileconfig)
         {
@@ -88,20 +90,35 @@ namespace WindowsMenu
                 writer.WriteElementString("defaultPreExec", this.defaultPreExec);
                 writer.WriteElementString("defaultPostExec", this.defaultPostExec);
                 writer.WriteElementString("exitOnExit", this.exitOnExit ? "1" : "0");
-
-/*
-                foreach (Employee employee in employees)
+                writer.WriteStartElement("programs");
+                foreach (OpcioMenu om in this.opcions)
                 {
-                    writer.WriteStartElement("Employee");
-
-                    writer.WriteElementString("ID", employee.Id.ToString());
-                    writer.WriteElementString("FirstName", employee.FirstName);
-                    writer.WriteElementString("LastName", employee.LastName);
-                    writer.WriteElementString("Salary", employee.Salary.ToString());
+                    writer.WriteStartElement("programs");
+                    writer.WriteElementString("Program", om.fileName);
+                    writer.WriteElementString("Icon", om.fileIcon);
+                    writer.WriteElementString("Label", om.label);
+                    writer.WriteElementString("PreExec", om.preExec);
+                    writer.WriteElementString("PostExec", om.postExec);
+                    writer.WriteElementString("Position", om.position.ToString());
+                    writer.WriteElementString("ExecDefault", om.execDefaultPreExec==false?"0":"1");
 
                     writer.WriteEndElement();
+
                 }
-*/
+
+                /*
+                                foreach (Employee employee in employees)
+                                {
+                                    writer.WriteStartElement("Employee");
+
+                                    writer.WriteElementString("ID", employee.Id.ToString());
+                                    writer.WriteElementString("FirstName", employee.FirstName);
+                                    writer.WriteElementString("LastName", employee.LastName);
+                                    writer.WriteElementString("Salary", employee.Salary.ToString());
+
+                                    writer.WriteEndElement();
+                                }
+                */
                 writer.WriteEndElement();
                 writer.WriteEndDocument();
             }
@@ -125,6 +142,16 @@ namespace WindowsMenu
         {
             this.opcions.Add(opt);
         }
+        public bool RemoveOpcio(System.Guid id)
+        {
+            var itemToRemove = this.opcions.SingleOrDefault(r => r.dynId == id);
+            if (itemToRemove != null)
+            {
+                this.opcions.Remove(itemToRemove);
+                return true;
+            }
+            return false;
+        }
         public bool loadMain(XmlNode opc)
         {
             var pre = getStringValue(opc,"PreExecDefault");
@@ -140,6 +167,30 @@ namespace WindowsMenu
             return true;
         }
 
+        public bool loadProgram(XmlNode prg)
+        {
+            var program = getStringValue(prg, "Program");
+            var icon = getStringValue(prg, "Icon");
+            var label = getStringValue(prg, "Label");
+            var pre = getStringValue(prg, "PreExec");
+            var post = getStringValue(prg, "PostExec");
+            var pos = getIntValue(prg, "Position");
+            var execdef = getStringValue(prg, "ExecDefault");
+            OpcioMenu om = new OpcioMenu(program, icon, label, pre, post, pos, execdef == "1" ? true : false);
+            this.AddOpcio(om);
+            return true;
+        }
+
+        public bool loadPrograms(XmlNode opc)
+        {
+            XmlNode basePrg = opc.SelectSingleNode("//programs");
+            XmlNodeList prgs = basePrg.SelectNodes("program");
+            foreach (XmlNode prg in prgs)
+            {
+                loadProgram(prg);
+            }
+            return true;
+        }
 
     }
 
