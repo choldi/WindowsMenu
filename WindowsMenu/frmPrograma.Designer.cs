@@ -43,11 +43,12 @@
             this.btnPre = new System.Windows.Forms.Button();
             this.txtPre = new System.Windows.Forms.TextBox();
             this.btnPost = new System.Windows.Forms.Button();
-            this.txtPro = new System.Windows.Forms.TextBox();
+            this.txtPost = new System.Windows.Forms.TextBox();
             this.ofd1 = new System.Windows.Forms.OpenFileDialog();
             this.cbDefault = new System.Windows.Forms.CheckBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.lblPosition = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -181,12 +182,12 @@
             this.btnPost.UseVisualStyleBackColor = true;
             this.btnPost.Click += new System.EventHandler(this.btnPost_Click);
             // 
-            // txtPro
+            // txtPost
             // 
-            this.txtPro.Location = new System.Drawing.Point(149, 219);
-            this.txtPro.Name = "txtPro";
-            this.txtPro.Size = new System.Drawing.Size(424, 26);
-            this.txtPro.TabIndex = 15;
+            this.txtPost.Location = new System.Drawing.Point(149, 219);
+            this.txtPost.Name = "txtPost";
+            this.txtPost.Size = new System.Drawing.Size(424, 26);
+            this.txtPost.TabIndex = 15;
             // 
             // cbDefault
             // 
@@ -205,6 +206,7 @@
             this.btnOK.TabIndex = 18;
             this.btnOK.Text = "&OK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
@@ -214,17 +216,28 @@
             this.btnCancel.TabIndex = 19;
             this.btnCancel.Text = "&Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
+            // lblPosition
+            // 
+            this.lblPosition.AutoSize = true;
+            this.lblPosition.Location = new System.Drawing.Point(145, 275);
+            this.lblPosition.Name = "lblPosition";
+            this.lblPosition.Size = new System.Drawing.Size(51, 20);
+            this.lblPosition.TabIndex = 20;
+            this.lblPosition.Text = "label8";
             // 
             // frmPrograma
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(679, 457);
+            this.Controls.Add(this.lblPosition);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.cbDefault);
             this.Controls.Add(this.btnPost);
-            this.Controls.Add(this.txtPro);
+            this.Controls.Add(this.txtPost);
             this.Controls.Add(this.btnPre);
             this.Controls.Add(this.txtPre);
             this.Controls.Add(this.txtLabel);
@@ -265,10 +278,11 @@
         private System.Windows.Forms.Button btnPre;
         private System.Windows.Forms.TextBox txtPre;
         private System.Windows.Forms.Button btnPost;
-        private System.Windows.Forms.TextBox txtPro;
+        private System.Windows.Forms.TextBox txtPost;
         private System.Windows.Forms.OpenFileDialog ofd1;
         private System.Windows.Forms.CheckBox cbDefault;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Label lblPosition;
     }
 }

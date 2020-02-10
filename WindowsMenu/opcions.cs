@@ -10,6 +10,8 @@ namespace WindowsMenu
 {
     public class OpcioMenu
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         public System.Guid dynId { get; private set; }
         public string fileName { get; private set; }
         public string fileIcon { get; private set; }
@@ -34,31 +36,54 @@ namespace WindowsMenu
 
     public class ConfigMenu
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         List<OpcioMenu> opcions;
         public int rows { get; private set; }
         public int columns { get; private set; }
         public string defaultPreExec { get; private set; }
         public string defaultPostExec { get; private set; }
         public bool exitOnExit { get; private set; }
+        public bool readOnly { get; private set; }
 
-        
+
 
         private string getStringValue(XmlNode elem, string key)
         {
+
             var child = elem[key];
-            if (child !=null ) return child.InnerText; else return "";
+            if (child != null)
+            {
+                Logger.Info("getStringValue {0} = {1}", key, child.InnerText);
+                return child.InnerText;
+            }
+            else
+            {
+                Logger.Info("getStringValue {0} = null = \"\"", key);
+                return "";
+            }
         }
         private int getIntValue(XmlNode elem, string key)
         {
             var child = elem[key];
-            if (child !=null ) return int.Parse(child.InnerText); else return 0;
+            if (child != null)
+            {
+                Logger.Info("getIntValue {0} = {1}", key, int.Parse(child.InnerText));
+                return int.Parse(child.InnerText);
+            }
+            else
+            {
+                Logger.Info("getStringValue {0} = null = 0", key);
+                return 0;
+            }
         }
         public ConfigMenu()
         {
         }
         public ConfigMenu(string fileconfig)
         {
-            string filepath=Path.GetFileName(fileconfig);
+            this.opcions = new List<OpcioMenu>();
+            string filepath = Path.GetFileName(fileconfig);
             FileInfo info = new FileInfo(filepath);
             if (!info.Exists) {
                 throw new InvalidConfigFileException(fileconfig);
@@ -70,18 +95,17 @@ namespace WindowsMenu
             {
                 throw new InvalidConfigFileException(fileconfig);
             }
-            this.opcions = new List<OpcioMenu>();
         }
         public void Save(string fileconfig)
         {
 
-            string filepath=Path.GetFileName(fileconfig);
-            var settings = new XmlWriterSettings() 
+            string filepath = Path.GetFileName(fileconfig);
+            var settings = new XmlWriterSettings()
             {
                 Indent = true,
                 IndentChars = "    "
             };
-            using (XmlWriter writer = XmlWriter.Create(filepath,settings))
+            using (XmlWriter writer = XmlWriter.Create(filepath, settings))
             {
                 writer.WriteStartDocument();
                 writer.WriteStartElement("General");
@@ -90,21 +114,23 @@ namespace WindowsMenu
                 writer.WriteElementString("defaultPreExec", this.defaultPreExec);
                 writer.WriteElementString("defaultPostExec", this.defaultPostExec);
                 writer.WriteElementString("exitOnExit", this.exitOnExit ? "1" : "0");
+                writer.WriteElementString("readOnly", this.readOnly ? "1" : "0");
                 writer.WriteStartElement("programs");
-                foreach (OpcioMenu om in this.opcions)
-                {
-                    writer.WriteStartElement("programs");
-                    writer.WriteElementString("Program", om.fileName);
-                    writer.WriteElementString("Icon", om.fileIcon);
-                    writer.WriteElementString("Label", om.label);
-                    writer.WriteElementString("PreExec", om.preExec);
-                    writer.WriteElementString("PostExec", om.postExec);
-                    writer.WriteElementString("Position", om.position.ToString());
-                    writer.WriteElementString("ExecDefault", om.execDefaultPreExec==false?"0":"1");
+                if (this.opcions != null)
+                    foreach (OpcioMenu om in this.opcions)
+                    {
+                        writer.WriteStartElement("program");
+                        writer.WriteElementString("Executable", om.fileName);
+                        writer.WriteElementString("Icon", om.fileIcon);
+                        writer.WriteElementString("Label", om.label);
+                        writer.WriteElementString("PreExec", om.preExec);
+                        writer.WriteElementString("PostExec", om.postExec);
+                        writer.WriteElementString("Position", om.position.ToString());
+                        writer.WriteElementString("ExecDefault", om.execDefaultPreExec == false ? "0" : "1");
 
-                    writer.WriteEndElement();
+                        writer.WriteEndElement();
 
-                }
+                    }
 
                 /*
                                 foreach (Employee employee in employees)
@@ -119,7 +145,8 @@ namespace WindowsMenu
                                     writer.WriteEndElement();
                                 }
                 */
-                writer.WriteEndElement();
+                writer.WriteEndElement(); //programs
+                writer.WriteEndElement(); //general
                 writer.WriteEndDocument();
             }
         }
@@ -154,30 +181,19 @@ namespace WindowsMenu
         }
         public bool loadMain(XmlNode opc)
         {
-            var pre = getStringValue(opc,"PreExecDefault");
-            var pos = getStringValue(opc,"PostExecDefault");
-            var rows = getIntValue(opc,"Rows");
-            var columns = getIntValue(opc,"Columns");
-            var exit = getIntValue(opc,"ExitOnLaunch") == 1 ? true : false;
-            this.columns=columns;
-            this.rows=rows;
-            this.defaultPreExec=pre;
-            this.defaultPostExec=pos;
+            var pre = getStringValue(opc, "PreExecDefault");
+            var pos = getStringValue(opc, "PostExecDefault");
+            var rows = getIntValue(opc, "Rows");
+            var columns = getIntValue(opc, "Columns");
+            var exit = getIntValue(opc, "ExitOnLaunch") == 1 ? true : false;
+            var readOnly = getIntValue(opc, "readOnly") == 1 ? true : false;
+            this.columns = columns;
+            this.rows = rows;
+            this.defaultPreExec = pre;
+            this.defaultPostExec = pos;
             this.exitOnExit = exit;
-            return true;
-        }
-
-        public bool loadProgram(XmlNode prg)
-        {
-            var program = getStringValue(prg, "Program");
-            var icon = getStringValue(prg, "Icon");
-            var label = getStringValue(prg, "Label");
-            var pre = getStringValue(prg, "PreExec");
-            var post = getStringValue(prg, "PostExec");
-            var pos = getIntValue(prg, "Position");
-            var execdef = getStringValue(prg, "ExecDefault");
-            OpcioMenu om = new OpcioMenu(program, icon, label, pre, post, pos, execdef == "1" ? true : false);
-            this.AddOpcio(om);
+            this.readOnly = readOnly;
+            loadPrograms(opc);
             return true;
         }
 
@@ -190,6 +206,49 @@ namespace WindowsMenu
                 loadProgram(prg);
             }
             return true;
+        }
+
+        public bool loadProgram(XmlNode prg)
+        {
+            var program = getStringValue(prg, "Executable");
+            var icon = getStringValue(prg, "Icon");
+            var label = getStringValue(prg, "Label");
+            var pre = getStringValue(prg, "PreExec");
+            var post = getStringValue(prg, "PostExec");
+            var pos = getIntValue(prg, "Position");
+            var execdef = getIntValue(prg, "ExecDefault");
+            OpcioMenu om = new OpcioMenu(program, icon, label, pre, post, pos, execdef == 1 ? true : false);
+            this.AddOpcio(om);
+            return true;
+        }
+
+        public bool addProgram(string program, string icon,string label, string pre, string post, int pos, bool execdef)
+        {
+            Logger.Info("addProgram : Add {0}", program);
+            OpcioMenu om = new OpcioMenu(program, icon, label, pre, post, pos, execdef);
+            this.opcions.Add(om);
+            return true;
+        }
+
+        public OpcioMenu getProgram(int x,int y)
+        {
+            int pos = x + (y - 1) * this.columns;
+            return getProgram(pos);
+        }
+
+        public OpcioMenu getProgram(int posicio)
+        {
+            OpcioMenu om = null;
+            if (this.opcions != null)
+                foreach (OpcioMenu opc in this.opcions)
+                {
+                    if (opc.position == posicio)
+                    {
+                        om = opc;
+                        break;
+                    }
+                }
+            return om;
         }
 
     }

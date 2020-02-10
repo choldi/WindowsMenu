@@ -12,10 +12,31 @@ namespace WindowsMenu
 {
     public partial class frmPrograma : Form
     {
-
+        ConfigMenu cf;
+        OpcioMenu om;
+        int posicio;
+        bool edit;
         public frmPrograma()
         {
             InitializeComponent();
+        }
+
+        public frmPrograma(ConfigMenu cf, int posicio, bool edit = false) : this()
+        {
+            this.cf = cf;
+            this.posicio = posicio;
+            this.edit = edit;
+            lblPosition.Text = posicio.ToString();
+        }
+        public frmPrograma(ConfigMenu cf, OpcioMenu opc, int posicio, bool edit = true) : this(cf,posicio,true)
+        {
+            this.om = opc;
+            txtPrograma.Text = opc.fileName;
+            txtIcono.Text = opc.fileIcon;
+            txtPre.Text = opc.preExec;
+            txtPost.Text = opc.postExec;
+            cbDefault.Checked = opc.execDefaultPreExec;
+
         }
         private string GetFile(string label, string filter,TextBox tb)
         {
@@ -47,8 +68,29 @@ namespace WindowsMenu
 
         private void btnPost_Click(object sender, EventArgs e)
         {
-            GetFile("Post Executable", "Executable|*.exe;*.bat;*.cmd|All Files|*.*", txtPre);
+            GetFile("Post Executable", "Executable|*.exe;*.bat;*.cmd|All Files|*.*", txtPost);
         }
 
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            if (txtPrograma.Text == "")
+            {
+                MessageBox.Show("Nom de fitxer buit");
+                txtPrograma.Focus();
+                return;
+            }
+            if (this.edit)
+            {
+                cf.RemoveOpcio(om.dynId);
+            }
+            cf.addProgram(txtPrograma.Text, txtIcono.Text, txtLabel.Text, txtPre.Text, txtPost.Text, int.Parse(lblPosition.Text), cbDefault.Checked);
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
     }
 }
