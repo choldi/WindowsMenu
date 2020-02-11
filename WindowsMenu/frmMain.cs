@@ -177,6 +177,31 @@ namespace WindowsMenu
             this.icons = pics;
 
         }
+
+        private void RemovePictureBox()
+        {
+            for (int i = 0; i < this.Controls.Count; i++)
+            {
+                if (this.Controls[i].GetType() == typeof(PictureBox))
+                {
+                    this.Controls.Remove(this.Controls[i]);
+                }
+            }
+        }
+        private void AddPictureBox()
+        {
+            createIcons();
+            for (int i = 0; i < this.icons.Count(); i++)
+            {
+                this.Controls.Add(this.icons[i]);
+            }
+        }
+
+        private void refreshPictures()
+        {
+            RemovePictureBox();
+            AddPictureBox();
+        }
         private void createIcons2()
         {
             float ample = this.Size.Width / configMenu.columns;
@@ -221,6 +246,7 @@ namespace WindowsMenu
                                 if (prg.ShowDialog() == DialogResult.OK)
                                 {
                                     configMenu.Save(fileName);
+                                    refreshPictures();
                                 }
                             }
                         });
@@ -240,6 +266,7 @@ namespace WindowsMenu
                                 if (prg.ShowDialog() == DialogResult.OK)
                                 {
                                     configMenu.Save(fileName);
+                                    refreshPictures();
                                 }
                             }
                         });
