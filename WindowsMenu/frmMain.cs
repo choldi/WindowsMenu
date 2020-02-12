@@ -112,6 +112,10 @@ namespace WindowsMenu
                     {
                         Logger.Info("Grabando configuracion");
                         configMenu.Save(fileName);
+                        OpcioMenu omx = configMenu.getProgram(tag.posicio);
+                        this.setPicture(omx, (int)tag.posicio);
+                        this.Refresh();
+                        refreshPictures();
                     }
                 }
             });
@@ -133,14 +137,13 @@ namespace WindowsMenu
                 tt.SetToolTip(pic, om.label);
             pic.Tag = new { posicio = posicio, commandLine = om.fileName, id = om.dynId };
             pic.MouseClick += new MouseEventHandler((s, ev) => {
-                MessageBox.Show("Hola " + (ev.Button == MouseButtons.Left ? "Left" : "Right"));
                 if (ev.Button == MouseButtons.Left)
                 {
                     PictureBox picx = s as PictureBox;
                     dynamic tag = picx.Tag;
                     System.Diagnostics.Process.Start(tag.commandLine);
                 }
-                if (ev.Button == MouseButtons.Right)
+                if (ev.Button == MouseButtons.Right && Control.ModifierKeys == Keys.None)
                 {
                     PictureBox picx = s as PictureBox;
                     dynamic tag = picx.Tag;
@@ -149,9 +152,25 @@ namespace WindowsMenu
                     if (prg.ShowDialog() == DialogResult.OK)
                     {
                         configMenu.Save(fileName);
+                        picx.Hide();
+                        omx = configMenu.getProgram(tag.posicio);
+                        PictureBox picNew = this.setPicture(omx, (int)tag.posicio);
+                        this.Controls.Add(picNew);
+                    }
+                }
+                if (ev.Button == MouseButtons.Right && 
+                    (ModifierKeys & Keys.Control) == Keys.Control &&
+                    (Keys.Alt & Control.ModifierKeys ) != Keys.Alt
+                   )
+                {
+                    DialogResult delete = MessageBox.Show("Borrar programa", "Borrar", MessageBoxButtons.OKCancel);
+                    if (delete == DialogResult.OK)
+                    {
+                        MessageBox.Show("Proceder a borrar");
                     }
                 }
             });
+            pic.Show();
             return pic;
         }
         private void createIcons()
@@ -200,86 +219,10 @@ namespace WindowsMenu
         private void refreshPictures()
         {
             RemovePictureBox();
+            createIcons();
             AddPictureBox();
         }
-        private void createIcons2()
-        {
-            float ample = this.Size.Width / configMenu.columns;
-            float alt = this.Size.Height / configMenu.rows;
-            Size midaImg = new Size((int)ample - 2, (int)alt - 2);
-            PictureBox[] pics = new PictureBox[configMenu.columns * configMenu.rows];
-            for (int i = 0; i < configMenu.rows; i++)
-                for (int j = 0; j < configMenu.columns; j++)
-                {
-                    int posicio = i * configMenu.columns + j + 1;
-                    pics[configMenu.columns * i + j] = new PictureBox();
-                    pics[configMenu.columns * i + j].Size = midaImg;
-                    ToolTip tt = new ToolTip();
-                    pics[configMenu.columns * i + j].Location = new Point((int)ample * j + 1, (int)alt * i + 1);
-                    pics[configMenu.columns * i + j].SizeMode = PictureBoxSizeMode.StretchImage;
-                    var findElem = configMenu.getProgram(posicio);
-                    if (findElem != null)
-                    {
-                        if (findElem.fileIcon == null || !File.Exists(findElem.fileIcon))
-                            pics[configMenu.columns * i + j].Image = Properties.Resources.programDefault;
-                        else
-                            pics[configMenu.columns * i + j].Image = Image.FromFile(findElem.fileIcon);
-                        if (findElem.label == null)
-                            tt.SetToolTip(pics[configMenu.columns * i + j], $"Executable: {findElem.fileName}");
-                        else
-                            tt.SetToolTip(pics[configMenu.columns * i + j], findElem.label);
-                        pics[configMenu.columns * i + j].Tag = new { fila = i + 1, columna = j + 1, posicio = posicio, commandLine = findElem.fileName, id = findElem.dynId };
-                        pics[configMenu.columns * i + j].MouseClick += new MouseEventHandler((s, ev) => {
-                            MessageBox.Show("Hola " + (ev.Button == MouseButtons.Left ? "Left" : "Right"));
-                            if (ev.Button == MouseButtons.Left)
-                            {
-                                PictureBox pic = s as PictureBox;
-                                dynamic tag = pic.Tag;
-                                System.Diagnostics.Process.Start(tag.commandLine);
-                            }
-                            if (ev.Button == MouseButtons.Right)
-                            {
-                                PictureBox pic = s as PictureBox;
-                                dynamic tag = pic.Tag;
-                                OpcioMenu om = configMenu.getProgram(tag.posicio);
-                                frmPrograma prg = new frmPrograma(configMenu, om, tag.posicio);
-                                if (prg.ShowDialog() == DialogResult.OK)
-                                {
-                                    configMenu.Save(fileName);
-                                    refreshPictures();
-                                }
-                            }
-                        });
-                    }
-                    else
-                    {
-                        pics[configMenu.columns * i + j].Image = Properties.Resources.no_program;
-                        tt.SetToolTip(pics[configMenu.columns * i + j], $"Posicion {posicio}: Sin programa");
-                        pics[configMenu.columns * i + j].Tag = new { fila = i + 1, columna = j + 1, posicio = posicio, commandLine = "", id = 0 };
-                        pics[configMenu.columns * i + j].MouseClick += new MouseEventHandler((s, ev) => {
-                            MessageBox.Show("Hola " + (ev.Button == MouseButtons.Left ? "Left" : "Right"));
-                            if (ev.Button == MouseButtons.Right)
-                            {
-                                PictureBox pic = s as PictureBox;
-                                dynamic tag = pic.Tag;
-                                frmPrograma prg = new frmPrograma(configMenu, tag.posicio);
-                                if (prg.ShowDialog() == DialogResult.OK)
-                                {
-                                    configMenu.Save(fileName);
-                                    refreshPictures();
-                                }
-                            }
-                        });
-
-                    }
-
-                   // this.Controls.Add(pics[configMenu.columns * i + j]);
-
-                }
-            this.icons = pics;
-
-        }
-        private void frmMain_Load(object sender, EventArgs e)
+     private void frmMain_Load(object sender, EventArgs e)
         {
             configLog();
             loadConfig();
