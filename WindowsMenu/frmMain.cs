@@ -111,11 +111,11 @@ namespace WindowsMenu
                     if (prg.ShowDialog() == DialogResult.OK)
                     {
                         Logger.Info("Grabando configuracion");
-                        configMenu.Save(fileName);
+                        configMenu.Save(this.fileName);
                         OpcioMenu omx = configMenu.getProgram(tag.posicio);
                         this.setPicture(omx, (int)tag.posicio);
-                        this.Refresh();
-                        refreshPictures();
+//                        this.Refresh();
+//                        refreshPictures();
                     }
                 }
             });
@@ -137,21 +137,19 @@ namespace WindowsMenu
                 tt.SetToolTip(pic, om.label);
             pic.Tag = new { posicio = posicio, commandLine = om.fileName, id = om.dynId };
             pic.MouseClick += new MouseEventHandler((s, ev) => {
+                PictureBox picx = s as PictureBox;
+                dynamic tag = picx.Tag;
+                OpcioMenu omx = configMenu.getProgram(tag.posicio);
                 if (ev.Button == MouseButtons.Left)
                 {
-                    PictureBox picx = s as PictureBox;
-                    dynamic tag = picx.Tag;
                     System.Diagnostics.Process.Start(tag.commandLine);
                 }
                 if (ev.Button == MouseButtons.Right && Control.ModifierKeys == Keys.None)
                 {
-                    PictureBox picx = s as PictureBox;
-                    dynamic tag = picx.Tag;
-                    OpcioMenu omx = configMenu.getProgram(tag.posicio);
                     frmPrograma prg = new frmPrograma(configMenu, omx, tag.posicio);
                     if (prg.ShowDialog() == DialogResult.OK)
                     {
-                        configMenu.Save(fileName);
+                        configMenu.Save(this.fileName);
                         picx.Hide();
                         omx = configMenu.getProgram(tag.posicio);
                         PictureBox picNew = this.setPicture(omx, (int)tag.posicio);
@@ -166,7 +164,11 @@ namespace WindowsMenu
                     DialogResult delete = MessageBox.Show("Borrar programa", "Borrar", MessageBoxButtons.OKCancel);
                     if (delete == DialogResult.OK)
                     {
-                        MessageBox.Show("Proceder a borrar");
+                        configMenu.RemoveOpcio((Guid)tag.id);
+                        configMenu.Save(this.fileName);
+                        picx.Hide();
+                        PictureBox picNew = setEmptyPicture(tag.posicio);
+                        this.Controls.Add(picNew);
                     }
                 }
             });
